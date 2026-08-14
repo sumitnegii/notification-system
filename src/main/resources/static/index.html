@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Send Notification</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #5f6b7a;
+      --border: #d8dee8;
+      --primary: #1f6feb;
+      --primary-hover: #185abc;
+      --danger-bg: #fff0f0;
+      --danger-text: #9f1d1d;
+      --success-bg: #eef8f1;
+      --success-text: #1f6b3a;
+      --focus: rgba(31, 111, 235, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(100%, 720px);
+      margin: 0 auto;
+      padding: 48px 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 12px 30px rgba(23, 32, 51, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    form {
+      display: grid;
+      gap: 20px;
+    }
+
+    label,
+    legend {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: var(--text);
+      font: inherit;
+      background: #ffffff;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--focus);
+      outline: none;
+    }
+
+    fieldset {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .channels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .channel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .channel input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    button {
+      width: fit-content;
+      min-width: 180px;
+      border: 0;
+      border-radius: 6px;
+      padding: 12px 18px;
+      background: var(--primary);
+      color: #ffffff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.68;
+    }
+
+    .status {
+      display: none;
+      margin-top: 20px;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+
+    .status.success {
+      display: block;
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .status.error {
+      display: block;
+      background: var(--danger-bg);
+      color: var(--danger-text);
+    }
+
+    @media (max-width: 560px) {
+      main {
+        padding: 24px 14px;
+      }
+
+      .panel {
+        padding: 22px;
+      }
+
+      .channels {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel" aria-labelledby="page-title">
+      <h1 id="page-title">Send Notification</h1>
+
+      <form id="notification-form">
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" name="userId" type="number" min="1" step="1" inputmode="numeric" required>
+        </div>
+
+        <div>
+          <label for="title">Notification title</label>
+          <input id="title" name="title" type="text" required>
+        </div>
+
+        <div>
+          <label for="body">Notification message/body</label>
+          <textarea id="body" name="body" required></textarea>
+        </div>
+
+        <fieldset>
+          <legend>Channel selection</legend>
+          <div class="channels">
+            <label class="channel">
+              <input type="checkbox" name="channels" value="EMAIL">
+              <span>EMAIL</span>
+            </label>
+            <label class="channel">
+              <input type="checkbox" name="channels" value="SMS">
+              <span>SMS</span>
+            </label>
+            <label class="channel">
+              <input type="checkbox" name="channels" value="PUSH">
+              <span>PUSH</span>
+            </label>
+            <label class="channel">
+              <input type="checkbox" name="channels" value="IN_APP">
+              <span>IN_APP</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button id="submit-button" type="submit">Send Notification</button>
+      </form>
+
+      <div id="status-message" class="status" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('notification-form');
+    const submitButton = document.getElementById('submit-button');
+    const statusMessage = document.getElementById('status-message');
+
+    function showStatus(type, message) {
+      statusMessage.className = `status ${type}`;
+      statusMessage.textContent = message;
+    }
+
+    async function getErrorMessage(response) {
+      const fallback = `Request failed with HTTP ${response.status}.`;
+      const contentType = response.headers.get('content-type') || '';
+
+      try {
+        if (contentType.includes('application/json')) {
+          const data = await response.json();
+          return data.message || data.error || data.detail || JSON.stringify(data);
+        }
+
+        const text = await response.text();
+        return text.trim() || fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const channels = formData.getAll('channels');
+      const userId = Number(formData.get('userId'));
+
+      if (!Number.isInteger(userId) || userId < 1) {
+        showStatus('error', 'Enter a valid user ID.');
+        return;
+      }
+
+      if (channels.length === 0) {
+        showStatus('error', 'Select at least one notification channel.');
+        return;
+      }
+
+      const payload = {
+        userId,
+        title: String(formData.get('title')).trim(),
+        body: String(formData.get('body')).trim(),
+        channels
+      };
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+      statusMessage.className = 'status';
+      statusMessage.textContent = '';
+
+      try {
+        const response = await fetch('http://localhost:8080/api/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const message = await getErrorMessage(response);
+          showStatus('error', response.status === 400 ? `Bad request: ${message}` : message);
+          return;
+        }
+
+        const successText = await response.text();
+        showStatus('success', successText || 'Notification sent successfully.');
+        form.reset();
+      } catch (error) {
+        showStatus('error', 'Unable to reach the notification API. Confirm the backend is running on http://localhost:8080.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send Notification';
+      }
+    });
+  </script>
+</body>
+</html>
